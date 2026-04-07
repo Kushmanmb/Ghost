@@ -3,13 +3,15 @@ const {ValidationError} = require('@tryghost/errors');
 const validator = require('@tryghost/validator');
 const tpl = require('@tryghost/tpl');
 const AnnouncementBarSettings = require('../../../../../services/announcement-bar-service/AnnouncementBarSettings');
+const labs = require('../../../../../../shared/labs');
 
 const messages = {
     invalidEmailReceived: 'Please send a valid email',
     invalidEmailValueReceived: 'Please enter a valid email address.',
     invalidEmailTypeReceived: 'Invalid email type received',
     invalidAnnouncementVisibilityValueReceived: 'Please enter a valid announcement visibility value',
-    invalidAnnouncementBackgroundValueReceived: 'Please enter a valid announcement background value'
+    invalidAnnouncementBackgroundValueReceived: 'Please enter a valid announcement background value',
+    adminVisibilityRequiresPrivilegedFlag: 'The "admin" announcement visibility requires at least one privileged announcement feature flag to be enabled'
 };
 
 module.exports = {
@@ -71,7 +73,8 @@ module.exports = {
                 const validVisibilityValues = [
                     AnnouncementBarSettings.VisibilityValues.VISITORS,
                     AnnouncementBarSettings.VisibilityValues.FREE_MEMBERS,
-                    AnnouncementBarSettings.VisibilityValues.PAID_MEMBERS
+                    AnnouncementBarSettings.VisibilityValues.PAID_MEMBERS,
+                    AnnouncementBarSettings.VisibilityValues.ADMIN
                 ];
 
                 if (visibilityValues.length) {
@@ -84,6 +87,20 @@ module.exports = {
                             errors.push(visibilityError);
                         }
                     });
+
+                    // Maximum-security safeguard: the 'admin' visibility level may only be used
+                    // when at least one privileged announcement feature flag (foo / safeguard) is
+                    // currently enabled.  This prevents anonymous elevation of the visibility.
+                    if (visibilityValues.includes(AnnouncementBarSettings.VisibilityValues.ADMIN)) {
+                        const privilegedFlags = labs.getPrivilegedAnnouncementFlags();
+                        const hasPrivilegedFlagEnabled = privilegedFlags.some(flag => labs.isSet(flag));
+                        if (!hasPrivilegedFlagEnabled) {
+                            errors.push(new ValidationError({
+                                message: tpl(messages.adminVisibilityRequiresPrivilegedFlag),
+                                property: setting.key
+                            }));
+                        }
+                    }
                 }
             }
 

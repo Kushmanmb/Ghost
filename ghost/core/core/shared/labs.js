@@ -53,11 +53,41 @@ const PRIVATE_FEATURES = [
     'welcomeEmails',
     'adminForward',
     'domainWarmup',
-    'themeTranslation'
+    'themeTranslation',
+    'foo',
+    'safeguard'
 ];
+
+// Flags listed here control announcement-bar behaviour and are protected so that
+// only privileged (admin / developer-experiments-enabled) users can toggle them.
+// Any flag in this set must also appear in PRIVATE_FEATURES.
+const PRIVILEGED_ANNOUNCEMENT_FLAGS = new Set([
+    'foo',
+    'safeguard'
+]);
 
 module.exports.GA_KEYS = [...GA_FEATURES];
 module.exports.WRITABLE_KEYS_ALLOWLIST = [...PUBLIC_BETA_FEATURES, ...PRIVATE_FEATURES];
+
+/**
+ * Returns true when the given flag is tagged as a privileged announcement flag.
+ * These flags control announcement-bar behaviour and may only be enabled by
+ * admin users who have the developer-experiments setting turned on.
+ *
+ * @param {string} flag
+ * @returns {boolean}
+ */
+module.exports.isPrivilegedAnnouncementFlag = function isPrivilegedAnnouncementFlag(flag) {
+    return PRIVILEGED_ANNOUNCEMENT_FLAGS.has(flag);
+};
+
+/**
+ * Returns all flags that are tagged as privileged announcement flags.
+ * @returns {string[]}
+ */
+module.exports.getPrivilegedAnnouncementFlags = function getPrivilegedAnnouncementFlags() {
+    return [...PRIVILEGED_ANNOUNCEMENT_FLAGS];
+};
 
 module.exports.getAll = () => {
     const labs = _.cloneDeep(settingsCache.get('labs')) || {};
