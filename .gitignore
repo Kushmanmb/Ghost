@@ -205,3 +205,10 @@ yalc.lock
 .env.tinybird
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
+
+# GitHub Actions workflow yaml files (locally generated)
+.github/workflows/workflow.yaml
+workflow.yaml
+
+# Contributors file (auto-managed, not committed)
+.github/CONTRIBUTING.md
