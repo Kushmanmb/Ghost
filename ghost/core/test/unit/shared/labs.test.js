@@ -135,3 +135,70 @@ describe('Labs Service - Flag Integrity', function () {
         assert.equal(duplicates.length, 0, `There are duplicate flags in the labs configuration: ${duplicates.join(', ')}`);
     });
 });
+
+describe('Labs Service - Privileged Announcement Flags', function () {
+    it('foo is a writable private flag', function () {
+        assert.ok(labs.WRITABLE_KEYS_ALLOWLIST.includes('foo'), 'foo should be in WRITABLE_KEYS_ALLOWLIST');
+    });
+
+    it('safeguard is a writable private flag', function () {
+        assert.ok(labs.WRITABLE_KEYS_ALLOWLIST.includes('safeguard'), 'safeguard should be in WRITABLE_KEYS_ALLOWLIST');
+    });
+
+    it('isPrivilegedAnnouncementFlag returns true for foo', function () {
+        assert.equal(labs.isPrivilegedAnnouncementFlag('foo'), true);
+    });
+
+    it('isPrivilegedAnnouncementFlag returns true for safeguard', function () {
+        assert.equal(labs.isPrivilegedAnnouncementFlag('safeguard'), true);
+    });
+
+    it('isPrivilegedAnnouncementFlag returns false for a regular flag', function () {
+        assert.equal(labs.isPrivilegedAnnouncementFlag('webmentions'), false);
+        assert.equal(labs.isPrivilegedAnnouncementFlag('announcementBar'), false);
+        assert.equal(labs.isPrivilegedAnnouncementFlag('nonExistent'), false);
+    });
+
+    it('no GA_KEYS or PUBLIC_BETA_FEATURES flag is also a privileged announcement flag', function () {
+        // GA flags are always-on; PUBLIC_BETA are user-toggleable without dev experiments.
+        // Neither should ever be a privileged announcement flag.
+        const publicAndGaFlags = [
+            ...labs.GA_KEYS,
+            'superEditors', 'editorExcerpt', 'additionalPaymentMethods'
+        ];
+        publicAndGaFlags.forEach((flag) => {
+            assert.equal(
+                labs.isPrivilegedAnnouncementFlag(flag),
+                false,
+                `GA/public flag "${flag}" must NOT be a privileged announcement flag`
+            );
+        });
+    });
+
+    it('getPrivilegedAnnouncementFlags returns foo and safeguard', function () {
+        const privileged = labs.getPrivilegedAnnouncementFlags();
+        assert.ok(Array.isArray(privileged));
+        assert.ok(privileged.includes('foo'), 'should include foo');
+        assert.ok(privileged.includes('safeguard'), 'should include safeguard');
+    });
+
+    it('privileged announcement flags must all appear in WRITABLE_KEYS_ALLOWLIST', function () {
+        const privileged = labs.getPrivilegedAnnouncementFlags();
+        privileged.forEach((flag) => {
+            assert.ok(
+                labs.WRITABLE_KEYS_ALLOWLIST.includes(flag),
+                `Privileged flag "${flag}" must be in WRITABLE_KEYS_ALLOWLIST (PRIVATE_FEATURES)`
+            );
+        });
+    });
+
+    it('privileged announcement flags must NOT appear in GA_KEYS', function () {
+        const privileged = labs.getPrivilegedAnnouncementFlags();
+        privileged.forEach((flag) => {
+            assert.ok(
+                !labs.GA_KEYS.includes(flag),
+                `Privileged flag "${flag}" must NOT be in GA_KEYS (should require explicit opt-in)`
+            );
+        });
+    });
+});

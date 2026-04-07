@@ -20,6 +20,7 @@ describe('AnnouncementBarSettings', function () {
             assert.equal(AnnouncementBarSettings.VisibilityValues.VISITORS, 'visitors');
             assert.equal(AnnouncementBarSettings.VisibilityValues.FREE_MEMBERS, 'free_members');
             assert.equal(AnnouncementBarSettings.VisibilityValues.PAID_MEMBERS, 'paid_members');
+            assert.equal(AnnouncementBarSettings.VisibilityValues.ADMIN, 'admin');
         });
     });
 
@@ -138,6 +139,49 @@ describe('AnnouncementBarSettings', function () {
                 announcement_visibility: ['free_members', 'paid_members'],
                 announcement_background: 'dark'
             }, undefined, undefined);
+        });
+
+        it('returns announcement if visibility is set to admin and member is an admin', function () {
+            testVisibility({
+                announcement: 'Admin only notice',
+                announcement_visibility: ['admin'],
+                announcement_background: 'dark'
+            }, {
+                status: 'paid',
+                isAdmin: true
+            }, {
+                announcement: 'Admin only notice',
+                announcement_background: 'dark'
+            });
+        });
+
+        it('does not return announcement if visibility is set to admin and member is not an admin', function () {
+            testVisibility({
+                announcement: 'Admin only notice',
+                announcement_visibility: ['admin'],
+                announcement_background: 'dark'
+            }, {
+                status: 'paid',
+                isAdmin: false
+            }, undefined);
+        });
+
+        it('does not return announcement if visibility is set to admin and there is no member', function () {
+            testVisibility({
+                announcement: 'Admin only notice',
+                announcement_visibility: ['admin'],
+                announcement_background: 'dark'
+            }, undefined, undefined);
+        });
+
+        it('does not return announcement if visibility is set to admin and member has no isAdmin flag', function () {
+            testVisibility({
+                announcement: 'Admin only notice',
+                announcement_visibility: ['admin'],
+                announcement_background: 'dark'
+            }, {
+                status: 'paid'
+            }, undefined);
         });
     });
 });

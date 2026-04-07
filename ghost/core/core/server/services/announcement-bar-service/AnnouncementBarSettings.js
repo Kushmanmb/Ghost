@@ -17,6 +17,7 @@ class AnnouncementBarSettings {
     /**
      * @param {Object} [member]
      * @param {string} member.status
+     * @param {boolean} [member.isAdmin]
      * @returns {{announcement: string, announcement_background: string}}
      */
     getAnnouncementSettings(member) {
@@ -37,6 +38,9 @@ class AnnouncementBarSettings {
                 } else if (visibilities.includes(AnnouncementVisibilityValues.FREE_MEMBERS) && (member?.status === 'free')) {
                     announcement = announcementContent;
                 } else if (visibilities.includes(AnnouncementVisibilityValues.PAID_MEMBERS) && (member && member.status !== 'free')) {
+                    announcement = announcementContent;
+                } else if (visibilities.includes(AnnouncementVisibilityValues.ADMIN) && (member?.isAdmin === true)) {
+                    // Maximum-security: only site administrators receive this announcement
                     announcement = announcementContent;
                 }
             }
