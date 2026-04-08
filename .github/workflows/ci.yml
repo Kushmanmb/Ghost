@@ -330,69 +330,69 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-    - name: Check secrets
-      if: github.event_name == 'pull_request'
-      env:
-        STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
-      run: |
-        if [ -z "${{ env.STRIPE_PUBLISHABLE_KEY }}" ]; then
-          echo "Stripe Publishable Key is not available. Did you open this PR from a fork?"
-          echo "If so, please re-open the PR from a branch in the upstream TryGhost/Ghost repository."
-          exit 1
-        fi
-    - uses: actions/setup-node@v4
-      env:
-        FORCE_COLOR: 0
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: yarn
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Check secrets
+        if: github.event_name == 'pull_request'
+        env:
+          STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+        run: |
+          if [ -z "${{ env.STRIPE_PUBLISHABLE_KEY }}" ]; then
+            echo "Stripe Publishable Key is not available. Did you open this PR from a fork?"
+            echo "If so, please re-open the PR from a branch in the upstream TryGhost/Ghost repository."
+            exit 1
+          fi
+      - uses: actions/setup-node@v4
+        env:
+          FORCE_COLOR: 0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
 
-    - name: Install Stripe-CLI
-      run: |
-        export VERSION=1.13.5
-        wget "https://github.com/stripe/stripe-cli/releases/download/v$VERSION/stripe_${VERSION}_linux_x86_64.tar.gz"
-        tar -zxvf "stripe_${VERSION}_linux_x86_64.tar.gz"
-        mv stripe /usr/local/bin
-        stripe -v
+      - name: Install Stripe-CLI
+        run: |
+          export VERSION=1.13.5
+          wget "https://github.com/stripe/stripe-cli/releases/download/v$VERSION/stripe_${VERSION}_linux_x86_64.tar.gz"
+          tar -zxvf "stripe_${VERSION}_linux_x86_64.tar.gz"
+          mv stripe /usr/local/bin
+          stripe -v
 
-    - name: Restore caches
-      uses: ./.github/actions/restore-cache
-      env:
-        DEPENDENCY_CACHE_KEY: ${{ needs.job_setup.outputs.dependency_cache_key }}
+      - name: Restore caches
+        uses: ./.github/actions/restore-cache
+        env:
+          DEPENDENCY_CACHE_KEY: ${{ needs.job_setup.outputs.dependency_cache_key }}
 
-    - name: Run migrations
-      working-directory: ghost/core
-      run: yarn knex-migrator init
+      - name: Run migrations
+        working-directory: ghost/core
+        run: yarn knex-migrator init
 
-    - name: Setup Playwright
-      uses: ./.github/actions/setup-playwright
+      - name: Setup Playwright
+        uses: ./.github/actions/setup-playwright
 
-    - name: Build Admin
-      run: yarn nx run ghost-admin:build:dev
+      - name: Build Admin
+        run: yarn nx run ghost-admin:build:dev
 
-    - name: Run Playwright tests locally
-      run: yarn test:browser
-      env:
-        CI: true
-        STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
-        STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      - name: Run Playwright tests locally
+        run: yarn test:browser
+        env:
+          CI: true
+          STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
 
-    - uses: tryghost/actions/actions/slack-build@main
-      if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/main'
-      with:
-        status: ${{ job.status }}
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      - uses: tryghost/actions/actions/slack-build@main
+        if: failure() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          status: ${{ job.status }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-    - uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: browser-tests-playwright-report
-        path: ghost/core/playwright-report
-        retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-tests-playwright-report
+          path: ghost/core/playwright-report
+          retention-days: 30
 
   job_perf-tests:
     runs-on:
@@ -812,8 +812,8 @@ jobs:
     needs: [job_setup]
     if: needs.job_setup.outputs.changed_tinybird == 'true'
     defaults:
-        run:
-          working-directory: ghost/core/core/server/data/tinybird
+      run:
+        working-directory: ghost/core/core/server/data/tinybird
     services:
       tinybird:
         image: tinybirdco/tinybird-local:latest
